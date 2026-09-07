@@ -54,6 +54,16 @@ export interface SubagentNotifyDetails {
 	watchdogBlockers?: SubagentNotifyWatchdogBlocker[];
 }
 
+export interface IncrementalChildCompletion {
+	workflowRunId: string;
+	childKey: string;
+	childRunId?: string;
+	outcome: "completed" | "failed" | "paused" | "stopped";
+	outputReference?: string;
+	error?: string;
+	workflowRunning: boolean;
+}
+
 export interface CompletionNotification {
 	[key: string]: unknown;
 	id?: string | null;
@@ -306,6 +316,22 @@ export function formatSingleCompletion(details: SubagentNotifyDetails): string {
 	]
 		.filter((line) => line !== undefined)
 		.join("\n");
+}
+
+export function formatIncrementalChildCompletion(child: IncrementalChildCompletion): string {
+	const statusText = child.outcome === "completed" ? "completed"
+		: child.outcome === "failed" ? "failed"
+			: child.outcome === "paused" ? "paused (needs attention)"
+				: "stopped";
+	const workflowStatus = child.workflowRunning ? "workflow still running" : "workflow finished";
+	return [
+		`Workflow child ${statusText}: **${child.childKey}**`,
+		`Workflow run: ${child.workflowRunId}`,
+		...(child.childRunId ? [`Child run: ${child.childRunId}`] : []),
+		...(child.outputReference ? [`Output: ${child.outputReference}`] : []),
+		...(child.error ? [`Error: ${child.error}`] : []),
+		`Status: ${workflowStatus}`,
+	].join("\n");
 }
 
 export function parseSubagentNotifyContent(content: string): SubagentNotifyDetails | undefined {
