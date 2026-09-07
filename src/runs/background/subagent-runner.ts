@@ -232,6 +232,8 @@ interface SubagentRunConfig {
 	globalConcurrencyLimit?: number;
 	capabilityCeiling?: ResolvedSubagentCapabilityCeiling;
 	runFanoutBudget?: RunFanoutBudgetDescriptor;
+	/** Builtin tool names the host runtime provides; used to intersect agent-declared tools. */
+	hostAvailableBuiltins?: readonly string[];
 	launchContractDigest?: string;
 	launchResolvedExtensions?: LaunchResolvedChildExtensions;
 	runtimeAcknowledgedExtensions?: RuntimeAcknowledgedChildExtensions;
@@ -695,6 +697,7 @@ interface SingleStepContext {
 	nestedRoute?: NestedRouteInfo;
 	capabilityCeiling?: ResolvedSubagentCapabilityCeiling;
 	runFanoutBudget?: RunFanoutBudgetDescriptor;
+	hostAvailableBuiltins?: readonly string[];
 	onAttemptStart?: (attempt: { model?: string; thinking?: string; contextLimit?: number }) => void;
 	onChildEvent?: (event: ChildEvent) => void;
 	onExternalProcess?: (process: ExternalProcessStatus) => void;
@@ -811,6 +814,7 @@ export async function runSingleStepInner(
 			capabilityCeiling: step.capabilityCeiling ?? ctx.capabilityCeiling,
 			inheritedCapabilityCeiling: ctx.inheritedChildRuntime?.capabilityCeiling,
 			permissionRules: step.permissionRules,
+			hostAvailableBuiltins: ctx.hostAvailableBuiltins,
 		}));
 		const contractTools = resolvedTaskToolPlan.explicitToolAllowlist ? resolvedTaskToolPlan.effectiveToolAllowlist : undefined;
 		const contractError = validateImplementationToolContract({
@@ -1149,6 +1153,7 @@ export async function runSingleStepInner(
 				capabilityCeiling: step.capabilityCeiling ?? ctx.capabilityCeiling,
 				inheritedCapabilityCeiling: ctx.inheritedChildRuntime?.capabilityCeiling,
 				permissionRules: step.permissionRules,
+				hostAvailableBuiltins: ctx.hostAvailableBuiltins,
 			}));
 			launchResolvedExtensions = projectLaunchResolvedChildExtensions(toolPlan);
 			actualLaunchContractDigest = launchBindingDigest(omitUndefinedProperties({
@@ -3689,6 +3694,7 @@ export async function runSubagent(
 					nestedRoute: config.nestedRoute,
 					capabilityCeiling: config.capabilityCeiling,
 					runFanoutBudget: config.runFanoutBudget,
+					hostAvailableBuiltins: config.hostAvailableBuiltins,
 					registerInterrupt: (interrupt) => registerStepInterrupt(fi, interrupt),
 					registerTimeout: (interrupt) => registerStepTimeout(fi, interrupt),
 					registerStop: (stop) => registerStepStop(fi, stop),
@@ -4099,6 +4105,7 @@ export async function runSubagent(
 							nestedRoute: config.nestedRoute,
 							capabilityCeiling: config.capabilityCeiling,
 							runFanoutBudget: config.runFanoutBudget,
+							hostAvailableBuiltins: config.hostAvailableBuiltins,
 							registerInterrupt: (interrupt) => registerStepInterrupt(fi, interrupt),
 							registerTimeout: (interrupt) => registerStepTimeout(fi, interrupt),
 							registerStop: (stop) => registerStepStop(fi, stop),
@@ -4499,6 +4506,7 @@ export async function runSubagent(
 				nestedRoute: config.nestedRoute,
 				capabilityCeiling: config.capabilityCeiling,
 				runFanoutBudget: config.runFanoutBudget,
+				hostAvailableBuiltins: config.hostAvailableBuiltins,
 				registerInterrupt: (interrupt) => registerStepInterrupt(flatIndex, interrupt),
 				registerTimeout: (interrupt) => registerStepTimeout(flatIndex, interrupt),
 				registerStop: (stop) => registerStepStop(flatIndex, stop),
